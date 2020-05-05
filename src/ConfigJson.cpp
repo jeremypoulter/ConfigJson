@@ -31,7 +31,7 @@ bool ConfigJson::load()
 
   DBUGF("Got %d %c from EEPROM", length, start);
 
-  if(2 <= length && length < EEPROM.length() &&
+  if(2 <= length && length < _storage_size &&
     '{' == start)
   {
     char json[length + 1];
@@ -87,7 +87,7 @@ void ConfigJson::commit()
 
 bool ConfigJson::deserialize(const char *json) 
 {
-  const size_t capacity = JSON_OBJECT_SIZE(_len) + EEPROM.length();
+  const size_t capacity = JSON_OBJECT_SIZE(_len) + _storage_size;
   DynamicJsonDocument doc(capacity);
   
   DeserializationError err = deserializeJson(doc, json);
@@ -118,7 +118,7 @@ bool ConfigJson::deserialize(DynamicJsonDocument &doc)
 
 bool ConfigJson::serialize(String& json, bool longNames, bool compactOutput, bool hideSecrets)
 {
-  const size_t capacity = JSON_OBJECT_SIZE(30) + EEPROM.length();
+  const size_t capacity = JSON_OBJECT_SIZE(30) + _storage_size;
   DynamicJsonDocument doc(capacity);
 
   if(ConfigJson::serialize(doc, longNames, compactOutput, hideSecrets))
