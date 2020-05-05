@@ -1,0 +1,31 @@
+{
+  "name": "ConfigJson",
+  "keywords": "config,eeprom,json",
+  "description": "Save config options to EEPROM as a JSON documrt",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/jeremypoulter/ConfigJSON.git"
+  },
+  "authors":
+  [
+    {
+      "name": "Jeremy Poulter",
+      "email": "jeremy@bigjungle.net",
+      "maintainer": true
+    }
+  ],
+  "version": "0.0.1",
+  "frameworks": "*",
+  "platforms": "*",
+  "dependencies": [
+    {
+      "name": "Micro Debug",
+      "version": "~0.0.3"
+    },
+    {
+      "name": "ArduinoJSON",
+      "version": "~6.15.1"
+    }
+  ]
+}
