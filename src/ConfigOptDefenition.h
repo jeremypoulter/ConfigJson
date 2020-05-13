@@ -24,9 +24,6 @@ public:
 
   virtual bool set(T value) {    
     if(_val != value) {
-      DBUG(_long);
-      DBUG(" set to ");
-      DBUGLN(value);
       _val = value;
       return true;
     }

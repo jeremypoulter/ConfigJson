@@ -33,11 +33,6 @@ public:
 
   template <typename T> bool set(const char *name, T val)
   {
-    DBUG("Attempt set ");
-    DBUG(name);
-    DBUG(" to ");
-    DBUGLN(val);
-
     const size_t capacity = JSON_OBJECT_SIZE(1) + 256;
     DynamicJsonDocument doc(capacity);
     doc[name] = val;

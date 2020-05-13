@@ -130,6 +130,20 @@ bool ConfigJson::serialize(String& json, bool longNames, bool compactOutput, boo
   return false;
 }
 
+bool ConfigJson::serialize(Print& json, bool longNames, bool compactOutput, bool hideSecrets)
+{
+  const size_t capacity = JSON_OBJECT_SIZE(30) + _storage_size;
+  DynamicJsonDocument doc(capacity);
+
+  if(ConfigJson::serialize(doc, longNames, compactOutput, hideSecrets))
+  {
+    serializeJson(doc, json);
+    return true;
+  }
+
+  return false;
+}
+
 bool ConfigJson::serialize(DynamicJsonDocument &doc, bool longNames, bool compactOutput, bool hideSecrets)
 {
   for(size_t i = 0; i < _len; i++) {
