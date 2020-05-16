@@ -51,7 +51,7 @@ public:
       return set(val);
     }
 
-    return true;
+    return false;
   }
 
   virtual void setDefault() {

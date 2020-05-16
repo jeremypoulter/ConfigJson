@@ -1,10 +1,14 @@
 #ifndef _ConfigJson_h
 #define _ConfigJson_h
 
+#include <functional>
+
 #include "ConfigOpt.h"
 #include "ConfigOptDefenition.h"
 #include "ConfigOptSecret.h"
 #include "ConfigOptVirtualBool.h"
+
+typedef std::function<void(String name)> ConfigJsonChangeHandler;
 
 class ConfigJson
 {
@@ -14,6 +18,8 @@ private:
   ConfigOpt **_opts;
   size_t _len;
   size_t _storage_size;
+
+  ConfigJsonChangeHandler _change;
 public:
   ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize);
 
@@ -52,6 +58,9 @@ public:
     return set<double>(name, val);
   } 
 
+  void onChanged(ConfigJsonChangeHandler handler) {
+    _change = handler;
+  }
 };
 
 #endif // _ConfigJson_h

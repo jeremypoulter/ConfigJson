@@ -9,7 +9,8 @@ const __FlashStringHelper * ConfigOptSecret::DUMMY_PASSWORD = FPSTR(_DUMMY_PASSW
 ConfigJson::ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize) :
   _opts(opts),
   _len(len),
-  _storage_size(storageSize)
+  _storage_size(storageSize),
+  _change(nullptr)
 {
 }
 
@@ -110,6 +111,9 @@ bool ConfigJson::deserialize(DynamicJsonDocument &doc)
     {
       _modified = true;
       changed = true;
+      if(_change) {
+        _change(_opts[i]->name());
+      }
     }
   }
 
