@@ -16,7 +16,7 @@ ConfigJson::ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize) :
 
 bool ConfigJson::load() 
 {
-  bool loaded = true;
+  bool loaded = false;
 
   reset();
 
