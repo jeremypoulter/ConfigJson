@@ -15,6 +15,15 @@
       "maintainer": true
     }
   ],
+  "examples": [
+    { 
+      "name": "load_config",
+      "base": "examples/load_config",
+      "files": [
+        "src/load_config.cpp"
+      ]
+    }
+  ],
   "version": "0.0.4",
   "frameworks": "Arduino",
   "platforms": "*",
