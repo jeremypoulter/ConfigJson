@@ -24,17 +24,19 @@
       ]
     }
   ],
-  "version": "0.0.4",
+  "version": "0.0.5",
   "frameworks": "Arduino",
   "platforms": "*",
   "dependencies": [
     {
+      "owner": "jeremypoulter",
       "name": "Micro Debug",
-      "version": "~0.0.3"
+      "version": "^0.0.3"
     },
     {
-      "name": "ArduinoJSON",
-      "version": "~6.15.1"
+      "owner": "bblanchon",
+      "name": "ArduinoJson",
+      "version": "^6.16.1"
     }
   ]
 }
