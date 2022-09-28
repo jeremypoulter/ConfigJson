@@ -6,38 +6,41 @@
 const char ConfigOptSecret::_DUMMY_PASSWORD[] PROGMEM = "_DUMMY_PASSWORD";
 const __FlashStringHelper * ConfigOptSecret::DUMMY_PASSWORD = FPSTR(_DUMMY_PASSWORD);
 
-ConfigJson::ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize) :
+ConfigJson::ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t storageOffset) :
   _opts(opts),
   _len(len),
   _storage_size(storageSize),
+  _storage_offset(storageOffset),
   _change(nullptr)
 {
 }
 
-bool ConfigJson::load() 
+bool ConfigJson::load(bool merge) 
 {
   bool loaded = false;
 
-  reset();
+  if(false == merge) {
+    reset();
+  }
 
-  EEPROM.begin(_storage_size);
+  EEPROM.begin(_storage_offset + _storage_size);
 
   char start = 0;
   uint8_t a = 0, b = 0;
-  EEPROM.get(0, a);
-  EEPROM.get(1, b);
-  int length = a | (b << 8);
+  EEPROM.get(_storage_offset + 0, a);
+  EEPROM.get(_storage_offset + 1, b);
+  size_t length = a | (b << 8);
 
-  EEPROM.get(2, start);
+  EEPROM.get(_storage_offset + 2, start);
 
-  DBUGF("Got %d %c from EEPROM", length, start);
+  DBUGF("Got %d %c from EEPROM @ 0x%04x", length, start, _storage_offset);
 
   if(2 <= length && length < _storage_size &&
     '{' == start)
   {
     char json[length + 1];
-    for(int i = 0; i < length; i++) {
-      json[i] = EEPROM.read(2+i);
+    for(size_t i = 0; i < length; i++) {
+      json[i] = EEPROM.read(_storage_offset + 2 + i);
     }
     json[length] = '\0';
     DBUGF("Found stored JSON %s", json);
@@ -62,20 +65,20 @@ void ConfigJson::commit()
 
   DBUGF("Saving config");
   
-  EEPROM.begin(_storage_size);
+  EEPROM.begin(_storage_offset + _storage_size);
 
   String jsonStr;
   ConfigJson::serialize(jsonStr, false, true, false);
   const char *json = jsonStr.c_str();
   DBUGF("Writing %s to EEPROM", json);
   int length = jsonStr.length();
-  EEPROM.put(0, length & 0xff);
-  EEPROM.put(1, (length >> 8) & 0xff);
+  EEPROM.put(_storage_offset + 0, length & 0xff);
+  EEPROM.put(_storage_offset + 1, (length >> 8) & 0xff);
   for(int i = 0; i < length; i++) {
-    EEPROM.write(2+i, json[i]);
+    EEPROM.write(_storage_offset + 2 + i, json[i]);
   }
 
-  DBUGF("%d bytes written to EEPROM, committing", length + 2);
+  DBUGF("%d bytes written to EEPROM @ 0x%04x, committing", length + 2, _storage_offset);
 
   if(EEPROM.commit())
   {
@@ -84,6 +87,8 @@ void ConfigJson::commit()
   } else {
     DBUGF("Writting EEPROM failed");
   }
+
+  EEPROM.end();
 }
 
 bool ConfigJson::deserialize(const char *json) 

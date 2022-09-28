@@ -18,14 +18,15 @@ private:
   ConfigOpt **_opts;
   size_t _len;
   size_t _storage_size;
+  size_t _storage_offset;
 
   ConfigJsonChangeHandler _change;
 public:
-  ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize);
+  ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t storageOffset = 0);
 
   void reset();
   void commit();
-  bool load();
+  bool load(bool merge = false);
 
   bool serialize(String& json, bool longNames = true, bool compactOutput = false, bool hideSecrets = false);
   bool serialize(Print& json, bool longNames = true, bool compactOutput = false, bool hideSecrets = false);
