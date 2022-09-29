@@ -23,7 +23,7 @@ bool ConfigJson::load(bool merge)
     reset();
   }
 
-  EEPROM.begin(_storage_offset + _storage_size);
+  EEPROM.begin(_storage_size);
 
   char start = 0;
   uint8_t a = 0, b = 0;
@@ -65,7 +65,7 @@ void ConfigJson::commit()
 
   DBUGF("Saving config");
   
-  EEPROM.begin(_storage_offset + _storage_size);
+  EEPROM.begin(_storage_size);
 
   String jsonStr;
   ConfigJson::serialize(jsonStr, false, true, false);
