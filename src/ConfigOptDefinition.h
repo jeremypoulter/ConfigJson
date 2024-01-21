@@ -1,17 +1,19 @@
-#ifndef _ConfigOptDefenition_h
-#define _ConfigOptDefenition_h
+#ifndef _ConfigOptDefinition_h
+#define _ConfigOptDefinition_h
 
 #include <ConfigOpt.h>
 
+#define ConfigOptDefenition ConfigOptDefinition
+
 template<class T>
-class ConfigOptDefenition : public ConfigOpt
+class ConfigOptDefinition : public ConfigOpt
 {
 protected:
   T &_val;
   T _default;
 
 public:
-  ConfigOptDefenition(T &v, T d, const char *l, const char *s) :
+  ConfigOptDefinition(T &v, T d, const char *l, const char *s) :
     ConfigOpt(l, s),
     _val(v),
     _default(d)
@@ -59,4 +61,4 @@ public:
   }
 };
 
-#endif // _ConfigOptDefenition_h
+#endif // _ConfigOptDefinition_h
