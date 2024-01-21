@@ -4,7 +4,7 @@
 #include <functional>
 
 #include "ConfigOpt.h"
-#include "ConfigOptDefenition.h"
+#include "ConfigOptDefinition.h"
 #include "ConfigOptSecret.h"
 #include "ConfigOptVirtualBool.h"
 #include "ConfigOptVirtualMaskedBool.h"

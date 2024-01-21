@@ -1,10 +1,10 @@
 #ifndef _ConfigOptSecret_h
 #define _ConfigOptSecret_h
 
-#include "ConfigOptDefenition.h"
+#include "ConfigOptDefinition.h"
 
 
-class ConfigOptSecret : public ConfigOptDefenition<String>
+class ConfigOptSecret : public ConfigOptDefinition<String>
 {
 private:
   static const char _DUMMY_PASSWORD[];
@@ -13,7 +13,7 @@ public:
   static const __FlashStringHelper * DUMMY_PASSWORD;
 
   ConfigOptSecret(String &v, String d, const char *l, const char *s) :
-    ConfigOptDefenition<String>(v, d, l, s)
+    ConfigOptDefinition<String>(v, d, l, s)
   {
   }
 
@@ -22,7 +22,7 @@ public:
       return false;
     }
 
-    return ConfigOptDefenition<String>::set(value);
+    return ConfigOptDefinition<String>::set(value);
   }
 
   virtual bool serialize(DynamicJsonDocument &doc, bool longNames, bool compactOutput, bool hideSecrets) {
