@@ -7,10 +7,10 @@
 class ConfigOptVirtualMaskedBool : public ConfigOptVirtualBool
 {
 protected:
-  ConfigOptDefenition<uint32_t> &_change;
+  ConfigOptDefinition<uint32_t> &_change;
 
 public:
-  ConfigOptVirtualMaskedBool(ConfigOptDefenition<uint32_t> &base, ConfigOptDefenition<uint32_t> &change, uint32_t mask, uint32_t expected, const char *long_name, const char *short_name) :
+  ConfigOptVirtualMaskedBool(ConfigOptDefinition<uint32_t> &base, ConfigOptDefinition<uint32_t> &change, uint32_t mask, uint32_t expected, const char *long_name, const char *short_name) :
     ConfigOptVirtualBool(base, mask, expected, long_name, short_name),
     _change(change)
   {
