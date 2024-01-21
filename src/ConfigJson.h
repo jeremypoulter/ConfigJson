@@ -53,7 +53,7 @@ public:
   bool set(const char *name, int val) {
     return set<int>(name, val);
   } 
-  bool set(const char *name, String val) {
+  bool set(const char *name, String &val) {
     return set<String>(name, val);
   } 
   bool set(const char *name, bool val) {
@@ -62,19 +62,19 @@ public:
   bool set(const char *name, double val) {
     return set<double>(name, val);
   } 
-  bool set(String name, uint32_t val) {
+  bool set(String &name, uint32_t val) {
     return set<uint32_t>(name.c_str(), val);
   } 
-  bool set(String name, int val) {
+  bool set(String &name, int val) {
     return set<int>(name.c_str(), val);
   } 
-  bool set(String name, String val) {
+  bool set(String &name, String &val) {
     return set<String>(name.c_str(), val);
   } 
-  bool set(String name, bool val) {
+  bool set(String &name, bool val) {
     return set<bool>(name.c_str(), val);
   } 
-  bool set(String name, double val) {
+  bool set(String &name, double val) {
     return set<double>(name.c_str(), val);
   } 
 

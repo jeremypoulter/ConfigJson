@@ -17,7 +17,7 @@ public:
   {
   }
 
-  bool set(String value) {
+  bool set(String &value) {
     if(value.equals(DUMMY_PASSWORD)) {
       return false;
     }

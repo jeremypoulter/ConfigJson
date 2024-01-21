@@ -24,7 +24,7 @@ public:
     return _val;
   }
 
-  virtual bool set(T value) {    
+  virtual bool set(T &value) {    
     if(_val != value) {
       _val = value;
       return true;
