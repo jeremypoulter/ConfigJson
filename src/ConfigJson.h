@@ -7,6 +7,7 @@
 #include "ConfigOptDefinition.h"
 #include "ConfigOptSecret.h"
 #include "ConfigOptVirtualBool.h"
+#include "ConfigOptVirtualMaskedBool.h"
 
 typedef std::function<void(String name)> ConfigJsonChangeHandler;
 
