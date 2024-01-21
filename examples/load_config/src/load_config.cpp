@@ -10,9 +10,9 @@ bool truth;
 
 ConfigOpt *opts[] = 
 {
-  new ConfigOptDefenition <String>(string, "string", "string", "s"),
-  new ConfigOptDefenition <int32_t>(number, 0, "number", "n"),
-  new ConfigOptDefenition <bool>(truth, false, "truth", "t"),
+  new ConfigOptDefinition <String>(string, "string", "string", "s"),
+  new ConfigOptDefinition <int32_t>(number, 0, "number", "n"),
+  new ConfigOptDefinition <bool>(truth, false, "truth", "t"),
   new ConfigOptSecret(secret, "secret", "password", "p")
 };
 

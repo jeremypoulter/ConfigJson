@@ -2,17 +2,17 @@
 #define _ConfigOptVirtualBool_h
 
 #include "ConfigOpt.h"
-#include "ConfigOptDefenition.h"
+#include "ConfigOptDefinition.h"
 
 class ConfigOptVirtualBool : public ConfigOpt
 {
 protected:
-  ConfigOptDefenition<uint32_t> &_base;
+  ConfigOptDefinition<uint32_t> &_base;
   uint32_t _mask;
   uint32_t _expected;
 
 public:
-  ConfigOptVirtualBool(ConfigOptDefenition<uint32_t> &b, uint32_t m, uint32_t e, const char *l, const char *s) :
+  ConfigOptVirtualBool(ConfigOptDefinition<uint32_t> &b, uint32_t m, uint32_t e, const char *l, const char *s) :
     ConfigOpt(l, s),
     _base(b),
     _mask(m),

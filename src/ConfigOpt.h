@@ -4,7 +4,7 @@
 #include <ArduinoJson.h>
 
 class ConfigOpt;
-template<class T> class ConfigOptDefenition;
+template<class T> class ConfigOptDefinition;
 
 class ConfigOpt
 {
@@ -27,7 +27,7 @@ public:
   virtual void setDefault() = 0;
 
   template <typename T> bool set(T val) {
-    ConfigOptDefenition<T> *opt = (ConfigOptDefenition<T> *)this;
+    ConfigOptDefinition<T> *opt = (ConfigOptDefinition<T> *)this;
     return opt->set(val);
   }
 };
