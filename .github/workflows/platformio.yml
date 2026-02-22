@@ -17,6 +17,10 @@ jobs:
           board: huzzah
         - example: load_config
           board: esp-wrover-kit
+        - example: load_config
+          board: huzzah-v7
+        - example: load_config
+          board: esp-wrover-kit-v7
 
     runs-on: ubuntu-latest
     name: Build ${{ matrix.example }}-${{ matrix.board }}

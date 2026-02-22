@@ -31,18 +31,22 @@ public:
 
   bool serialize(String& json, bool longNames = true, bool compactOutput = false, bool hideSecrets = false);
   bool serialize(Print& json, bool longNames = true, bool compactOutput = false, bool hideSecrets = false);
-  bool serialize(DynamicJsonDocument &doc, bool longNames = true, bool compactOutput = false, bool hideSecrets = false);
+  bool serialize(CONFIG_JSON_DOC &doc, bool longNames = true, bool compactOutput = false, bool hideSecrets = false);
 
   bool deserialize(String& json) {
     return deserialize(json.c_str());
   }
   bool deserialize(const char *json);
-  bool deserialize(DynamicJsonDocument &doc);
+  bool deserialize(CONFIG_JSON_DOC &doc);
 
   template <typename T> bool set(const char *name, T val)
   {
+#if ARDUINOJSON_VERSION_MAJOR >= 7
+    JsonDocument doc;
+#else
     const size_t capacity = JSON_OBJECT_SIZE(1) + 256;
     DynamicJsonDocument doc(capacity);
+#endif
     doc[name] = val;
     return ConfigJson::deserialize(doc);
   }

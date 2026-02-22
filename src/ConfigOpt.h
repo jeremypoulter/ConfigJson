@@ -3,6 +3,12 @@
 
 #include <ArduinoJson.h>
 
+#if ARDUINOJSON_VERSION_MAJOR >= 7
+  #define CONFIG_JSON_DOC JsonDocument
+#else
+  #define CONFIG_JSON_DOC DynamicJsonDocument
+#endif
+
 class ConfigOpt;
 template<class T> class ConfigOptDefinition;
 
@@ -22,8 +28,8 @@ public:
     return longName ? _long : _short;
   }
 
-  virtual bool serialize(DynamicJsonDocument &doc, bool longNames, bool compactOutput, bool hideSecrets) = 0;
-  virtual bool deserialize(DynamicJsonDocument &doc) = 0;
+  virtual bool serialize(CONFIG_JSON_DOC &doc, bool longNames, bool compactOutput, bool hideSecrets) = 0;
+  virtual bool deserialize(CONFIG_JSON_DOC &doc) = 0;
   virtual void setDefault() = 0;
 
   template <typename T> bool set(T val) {

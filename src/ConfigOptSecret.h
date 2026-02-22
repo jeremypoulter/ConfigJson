@@ -25,7 +25,7 @@ public:
     return ConfigOptDefinition<String>::set(value);
   }
 
-  virtual bool serialize(DynamicJsonDocument &doc, bool longNames, bool compactOutput, bool hideSecrets) {
+  virtual bool serialize(CONFIG_JSON_DOC &doc, bool longNames, bool compactOutput, bool hideSecrets) {
     if(!compactOutput || _val != _default) {
       if(hideSecrets) {
         doc[name(longNames)] = (_val != 0) ? String(DUMMY_PASSWORD) : "";

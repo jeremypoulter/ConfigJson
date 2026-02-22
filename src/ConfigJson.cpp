@@ -93,8 +93,12 @@ void ConfigJson::commit()
 
 bool ConfigJson::deserialize(const char *json) 
 {
+#if ARDUINOJSON_VERSION_MAJOR >= 7
+  JsonDocument doc;
+#else
   const size_t capacity = JSON_OBJECT_SIZE(_len) + _storage_size;
   DynamicJsonDocument doc(capacity);
+#endif
   
   DeserializationError err = deserializeJson(doc, json);
   if(DeserializationError::Code::Ok == err)
@@ -107,7 +111,7 @@ bool ConfigJson::deserialize(const char *json)
   return false;
 }
 
-bool ConfigJson::deserialize(DynamicJsonDocument &doc) 
+bool ConfigJson::deserialize(CONFIG_JSON_DOC &doc) 
 {
   bool changed = false;
 
@@ -127,8 +131,12 @@ bool ConfigJson::deserialize(DynamicJsonDocument &doc)
 
 bool ConfigJson::serialize(String& json, bool longNames, bool compactOutput, bool hideSecrets)
 {
+#if ARDUINOJSON_VERSION_MAJOR >= 7
+  JsonDocument doc;
+#else
   const size_t capacity = JSON_OBJECT_SIZE(30) + _storage_size;
   DynamicJsonDocument doc(capacity);
+#endif
 
   if(ConfigJson::serialize(doc, longNames, compactOutput, hideSecrets))
   {
@@ -141,8 +149,12 @@ bool ConfigJson::serialize(String& json, bool longNames, bool compactOutput, boo
 
 bool ConfigJson::serialize(Print& json, bool longNames, bool compactOutput, bool hideSecrets)
 {
+#if ARDUINOJSON_VERSION_MAJOR >= 7
+  JsonDocument doc;
+#else
   const size_t capacity = JSON_OBJECT_SIZE(30) + _storage_size;
   DynamicJsonDocument doc(capacity);
+#endif
 
   if(ConfigJson::serialize(doc, longNames, compactOutput, hideSecrets))
   {
@@ -153,7 +165,7 @@ bool ConfigJson::serialize(Print& json, bool longNames, bool compactOutput, bool
   return false;
 }
 
-bool ConfigJson::serialize(DynamicJsonDocument &doc, bool longNames, bool compactOutput, bool hideSecrets)
+bool ConfigJson::serialize(CONFIG_JSON_DOC &doc, bool longNames, bool compactOutput, bool hideSecrets)
 {
   for(size_t i = 0; i < _len; i++) {
     _opts[i]->serialize(doc, longNames, compactOutput, hideSecrets);
@@ -178,8 +190,12 @@ template <typename T> bool ConfigJson::set(const char *name, T val)
   DBUG(" to ");
   DBUGLN(val);
 
+#if ARDUINOJSON_VERSION_MAJOR >= 7
+  JsonDocument doc;
+#else
   const size_t capacity = JSON_OBJECT_SIZE(1) + 256;
   DynamicJsonDocument doc(capacity);
+#endif
   doc[name] = val;
   return ConfigJson::deserialize(doc);
 }

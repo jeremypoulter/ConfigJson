@@ -32,7 +32,7 @@ public:
     return _base.set(newVal);
   }
 
-  virtual bool serialize(DynamicJsonDocument &doc, bool longNames, bool compactOutput, bool hideSecrets) {
+  virtual bool serialize(CONFIG_JSON_DOC &doc, bool longNames, bool compactOutput, bool hideSecrets) {
     if(!compactOutput) {
       doc[name(longNames)] = get();
       return true;
@@ -40,10 +40,18 @@ public:
     return false;
   }
 
-  virtual bool deserialize(DynamicJsonDocument &doc) {
+  virtual bool deserialize(CONFIG_JSON_DOC &doc) {
+#if ARDUINOJSON_VERSION_MAJOR >= 7
+    if(doc[_long].is<JsonVariant>()) {
+#else
     if(doc.containsKey(_long)) {
+#endif
       return set(doc[_long].as<bool>());
-    } else if(doc.containsKey(_short)) { \
+#if ARDUINOJSON_VERSION_MAJOR >= 7
+    } else if(doc[_short].is<JsonVariant>()) {
+#else
+    } else if(doc.containsKey(_short)) {
+#endif
       return set(doc[_short].as<bool>());
     }
 
