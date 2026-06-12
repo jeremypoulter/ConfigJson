@@ -32,7 +32,7 @@ public:
   virtual bool deserialize(CONFIG_JSON_DOC &doc) = 0;
   virtual void setDefault() = 0;
 
-  template <typename T> bool set(T val) {
+  template <typename T> bool set(const T &val) {
     ConfigOptDefinition<T> *opt = (ConfigOptDefinition<T> *)this;
     return opt->set(val);
   }

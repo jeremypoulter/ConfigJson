@@ -33,7 +33,7 @@ public:
   bool serialize(Print& json, bool longNames = true, bool compactOutput = false, bool hideSecrets = false);
   bool serialize(CONFIG_JSON_DOC &doc, bool longNames = true, bool compactOutput = false, bool hideSecrets = false);
 
-  bool deserialize(String& json) {
+  bool deserialize(const String& json) {
     return deserialize(json.c_str());
   }
   bool deserialize(const char *json);
@@ -57,7 +57,7 @@ public:
   bool set(const char *name, int val) {
     return set<int>(name, val);
   } 
-  bool set(const char *name, String &val) {
+  bool set(const char *name, const String &val) {
     return set<String>(name, val);
   } 
   bool set(const char *name, bool val) {
@@ -66,19 +66,19 @@ public:
   bool set(const char *name, double val) {
     return set<double>(name, val);
   } 
-  bool set(String &name, uint32_t val) {
+  bool set(const String &name, uint32_t val) {
     return set<uint32_t>(name.c_str(), val);
   } 
-  bool set(String &name, int val) {
+  bool set(const String &name, int val) {
     return set<int>(name.c_str(), val);
   } 
-  bool set(String &name, String &val) {
+  bool set(const String &name, const String &val) {
     return set<String>(name.c_str(), val);
   } 
-  bool set(String &name, bool val) {
+  bool set(const String &name, bool val) {
     return set<bool>(name.c_str(), val);
   } 
-  bool set(String &name, double val) {
+  bool set(const String &name, double val) {
     return set<double>(name.c_str(), val);
   } 
 
