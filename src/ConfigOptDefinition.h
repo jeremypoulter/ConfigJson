@@ -13,7 +13,7 @@ protected:
   T _default;
 
 public:
-  ConfigOptDefinition(T &v, T d, const char *l, const char *s) :
+  ConfigOptDefinition(T &v, const T &d, const char *l, const char *s) :
     ConfigOpt(l, s),
     _val(v),
     _default(d)
@@ -24,7 +24,7 @@ public:
     return _val;
   }
 
-  virtual bool set(T &value) {    
+  virtual bool set(const T &value) {    
     if(_val != value) {
       _val = value;
       return true;

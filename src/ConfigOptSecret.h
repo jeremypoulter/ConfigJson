@@ -12,12 +12,12 @@ private:
 public:
   static const __FlashStringHelper * DUMMY_PASSWORD;
 
-  ConfigOptSecret(String &v, String d, const char *l, const char *s) :
+  ConfigOptSecret(String &v, const String &d, const char *l, const char *s) :
     ConfigOptDefinition<String>(v, d, l, s)
   {
   }
 
-  bool set(String &value) {
+  bool set(const String &value) {
     if(value.equals(DUMMY_PASSWORD)) {
       return false;
     }
