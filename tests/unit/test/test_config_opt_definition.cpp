@@ -3,6 +3,8 @@
 #include <ArduinoJson.h>
 #include <ConfigOptDefinition.h>
 
+#include "test_support.h"
+
 static void test_get_returns_the_bound_value() {
   int32_t backing = 42;
   ConfigOptDefinition<int32_t> opt(backing, 0, "number", "n");
@@ -39,7 +41,8 @@ static void test_set_default_resets_the_backing_value() {
 static void test_serialize_uses_requested_name_form() {
   int32_t backing = 3;
   ConfigOptDefinition<int32_t> opt(backing, 0, "number", "n");
-  JsonDocument longDoc, shortDoc;
+  TEST_JSON_DOC(longDoc);
+  TEST_JSON_DOC(shortDoc);
 
   TEST_ASSERT_TRUE(opt.serialize(longDoc, true, false, false));
   TEST_ASSERT_EQUAL(3, longDoc["number"].as<int32_t>());
@@ -51,7 +54,7 @@ static void test_serialize_uses_requested_name_form() {
 static void test_serialize_compact_output_skips_default_values() {
   int32_t backing = 0;
   ConfigOptDefinition<int32_t> opt(backing, 0, "number", "n");
-  JsonDocument doc;
+  TEST_JSON_DOC(doc);
 
   TEST_ASSERT_FALSE(opt.serialize(doc, true, true, false));
   TEST_ASSERT_TRUE(doc["number"].isNull());
@@ -64,7 +67,7 @@ static void test_serialize_compact_output_skips_default_values() {
 static void test_deserialize_prefers_long_name_over_short() {
   int32_t backing = 0;
   ConfigOptDefinition<int32_t> opt(backing, 0, "number", "n");
-  JsonDocument doc;
+  TEST_JSON_DOC(doc);
   doc["number"] = 10;
   doc["n"] = 20;
 
@@ -75,7 +78,7 @@ static void test_deserialize_prefers_long_name_over_short() {
 static void test_deserialize_falls_back_to_short_name() {
   int32_t backing = 0;
   ConfigOptDefinition<int32_t> opt(backing, 0, "number", "n");
-  JsonDocument doc;
+  TEST_JSON_DOC(doc);
   doc["n"] = 20;
 
   TEST_ASSERT_TRUE(opt.deserialize(doc));
@@ -85,7 +88,7 @@ static void test_deserialize_falls_back_to_short_name() {
 static void test_deserialize_returns_false_when_key_absent() {
   int32_t backing = 4;
   ConfigOptDefinition<int32_t> opt(backing, 0, "number", "n");
-  JsonDocument doc;
+  TEST_JSON_DOC(doc);
   doc["other"] = 1;
 
   TEST_ASSERT_FALSE(opt.deserialize(doc));
@@ -95,7 +98,7 @@ static void test_deserialize_returns_false_when_key_absent() {
 static void test_deserialize_returns_false_when_value_unchanged() {
   int32_t backing = 5;
   ConfigOptDefinition<int32_t> opt(backing, 0, "number", "n");
-  JsonDocument doc;
+  TEST_JSON_DOC(doc);
   doc["number"] = 5;
 
   TEST_ASSERT_FALSE(opt.deserialize(doc));
@@ -104,7 +107,7 @@ static void test_deserialize_returns_false_when_value_unchanged() {
 static void test_bool_option_round_trips() {
   bool backing = false;
   ConfigOptDefinition<bool> opt(backing, false, "truth", "t");
-  JsonDocument doc;
+  TEST_JSON_DOC(doc);
   doc["truth"] = true;
 
   TEST_ASSERT_TRUE(opt.deserialize(doc));
@@ -114,13 +117,13 @@ static void test_bool_option_round_trips() {
 static void test_string_option_round_trips() {
   String backing = "";
   ConfigOptDefinition<String> opt(backing, "", "name", "nm");
-  JsonDocument doc;
+  TEST_JSON_DOC(doc);
   doc["name"] = "hello";
 
   TEST_ASSERT_TRUE(opt.deserialize(doc));
   TEST_ASSERT_TRUE(backing.equals("hello"));
 
-  JsonDocument out;
+  TEST_JSON_DOC(out);
   TEST_ASSERT_TRUE(opt.serialize(out, true, false, false));
   TEST_ASSERT_EQUAL_STRING("hello", out["name"].as<const char *>());
 }

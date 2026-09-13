@@ -3,6 +3,8 @@
 #include <EEPROM.h>
 #include <ConfigJson.h>
 
+#include "test_support.h"
+
 namespace {
 
 // A small, representative set of options -- one of each ConfigOpt flavour
@@ -63,7 +65,7 @@ static void test_serialize_includes_every_option() {
   String json;
   TEST_ASSERT_TRUE(fx.config.serialize(json, true, false, false));
 
-  JsonDocument doc;
+  TEST_JSON_DOC(doc);
   TEST_ASSERT_FALSE(deserializeJson(doc, json));
   TEST_ASSERT_EQUAL_STRING("widget", doc["name"].as<const char *>());
   TEST_ASSERT_EQUAL(5, doc["number"].as<int32_t>());

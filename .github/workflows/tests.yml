@@ -22,11 +22,16 @@ jobs:
           pip install -U gcovr platformio
           platformio update
 
-      - name: Run native unit tests
+      - name: Run native unit tests (ArduinoJson v7)
         run: |
           cd tests/unit
           mkdir -p test-results
           pio test -e native --junit-output-path test-results/native-junit.xml
+
+      - name: Run native unit tests (ArduinoJson v6)
+        run: |
+          cd tests/unit
+          pio test -e native_v6 --junit-output-path test-results/native-v6-junit.xml
 
       - name: Generate coverage report
         run: |
@@ -45,6 +50,7 @@ jobs:
           name: native-test-artifacts
           path: |
             tests/unit/test-results/native-junit.xml
+            tests/unit/test-results/native-v6-junit.xml
             tests/unit/test-results/coverage.xml
 
   publish-reports:
@@ -63,12 +69,12 @@ jobs:
           path: tests/unit/test-results
 
       - name: Publish native test results
-        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && hashFiles('tests/unit/test-results/native-junit.xml') != ''
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && hashFiles('tests/unit/test-results/*-junit.xml') != ''
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           check_name: Native unit test results
           comment_title: Native unit test results
-          files: tests/unit/test-results/native-junit.xml
+          files: tests/unit/test-results/*-junit.xml
 
       - name: Publish coverage summary
         if: always() && hashFiles('tests/unit/test-results/coverage.xml') != ''

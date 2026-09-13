@@ -3,6 +3,8 @@
 #include <ArduinoJson.h>
 #include <ConfigOptVirtualBool.h>
 
+#include "test_support.h"
+
 // Named "flag" rather than "bit" -- Arduino.h #defines bit(b) as a function
 // macro, which swallows a same-named local variable's constructor arguments.
 static void test_get_reads_true_when_bit_matches_expected() {
@@ -56,12 +58,12 @@ static void test_serialize_writes_current_value_unless_compact() {
   uint32_t rawBacking = 0x01;
   ConfigOptDefinition<uint32_t> raw(rawBacking, 0, "flags", "f");
   ConfigOptVirtualBool flag(raw, 0x01, 0x01, "enabled", "e");
-  JsonDocument doc;
+  TEST_JSON_DOC(doc);
 
   TEST_ASSERT_TRUE(flag.serialize(doc, true, false, false));
   TEST_ASSERT_TRUE(doc["enabled"].as<bool>());
 
-  JsonDocument compactDoc;
+  TEST_JSON_DOC(compactDoc);
   TEST_ASSERT_FALSE(flag.serialize(compactDoc, true, true, false));
   TEST_ASSERT_TRUE(compactDoc["enabled"].isNull());
 }
@@ -70,7 +72,7 @@ static void test_deserialize_sets_the_virtual_bit_from_either_name() {
   uint32_t rawBacking = 0;
   ConfigOptDefinition<uint32_t> raw(rawBacking, 0, "flags", "f");
   ConfigOptVirtualBool flag(raw, 0x01, 0x01, "enabled", "e");
-  JsonDocument doc;
+  TEST_JSON_DOC(doc);
   doc["e"] = true;
 
   TEST_ASSERT_TRUE(flag.deserialize(doc));

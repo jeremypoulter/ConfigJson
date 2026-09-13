@@ -142,13 +142,16 @@ JSON text).
 Unit tests live in [`tests/unit`](tests/unit) and run on PlatformIO's
 `native` platform (no hardware required), using
 [EpoxyDuino](https://github.com/bxparks/EpoxyDuino) for the Arduino
-`String`/`Print`/EEPROM APIs on the host:
+`String`/`Print`/EEPROM APIs on the host. The same suite runs against both
+ArduinoJson v6 and v7 -- matching the `>=6.16.1` range ConfigJson supports --
+via two PlatformIO envs:
 
 ```sh
 cd tests/unit
-pio test -e native
+pio test -e native      # ArduinoJson v7
+pio test -e native_v6   # ArduinoJson v6
 ```
 
-Every push and pull request runs these tests in CI (see
+Every push and pull request runs both in CI (see
 [`.github/workflows/tests.yml`](.github/workflows/tests.yml)), which also
-reports results and line coverage on the pull request.
+reports results and line coverage (from the v7 run) on the pull request.
