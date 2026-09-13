@@ -42,13 +42,13 @@ public:
 
   virtual bool deserialize(CONFIG_JSON_DOC &doc) {
 #if ARDUINOJSON_VERSION_MAJOR >= 7
-    if(doc[_long].is<JsonVariant>()) {
+    if(!doc[_long].isNull()) {
 #else
     if(doc.containsKey(_long)) {
 #endif
       return set(doc[_long].as<bool>());
 #if ARDUINOJSON_VERSION_MAJOR >= 7
-    } else if(doc[_short].is<JsonVariant>()) {
+    } else if(!doc[_short].isNull()) {
 #else
     } else if(doc.containsKey(_short)) {
 #endif
