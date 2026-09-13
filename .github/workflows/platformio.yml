@@ -21,6 +21,8 @@ jobs:
           board: huzzah-v7
         - example: load_config
           board: esp-wrover-kit-v7
+        - example: virtual_bool_flags
+          board: huzzah
 
     runs-on: ubuntu-latest
     name: Build ${{ matrix.example }}-${{ matrix.board }}
