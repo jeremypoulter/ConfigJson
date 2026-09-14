@@ -40,10 +40,10 @@ void setup()
   Serial.println("");
 
   // Individual flags can be changed by name...
-  config.set("soundEnabled", false);
+  config.set("soundEnabled", true);
   // ...and the change is visible both on the virtual flag and the packed
   // word it lives in.
-  Serial.print("flags after disabling sound: 0b");
+  Serial.print("flags after enabling sound: 0b");
   Serial.println(flags, BIN);
 
   config.commit();
