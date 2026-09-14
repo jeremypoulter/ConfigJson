@@ -10,30 +10,34 @@ permissions:
 jobs:
   native-tests:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - env: native
+            junit: native-junit.xml
+          - env: native_v6
+            junit: native-v6-junit.xml
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
 
       - name: Install PlatformIO
         run: |
           pip install -U gcovr platformio
           platformio update
 
-      - name: Run native unit tests (ArduinoJson v7)
+      - name: Run native unit tests (${{ matrix.env }})
         run: |
           cd tests/unit
           mkdir -p test-results
-          pio test -e native --junit-output-path test-results/native-junit.xml
-
-      - name: Run native unit tests (ArduinoJson v6)
-        run: |
-          cd tests/unit
-          pio test -e native_v6 --junit-output-path test-results/native-v6-junit.xml
+          pio test -e ${{ matrix.env }} --junit-output-path test-results/${{ matrix.junit }}
 
       - name: Generate coverage report
+        if: matrix.env == 'native'
         run: |
           gcovr \
             --root . \
@@ -45,13 +49,17 @@ jobs:
 
       - name: Upload native test artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: native-test-artifacts
-          path: |
-            tests/unit/test-results/native-junit.xml
-            tests/unit/test-results/native-v6-junit.xml
-            tests/unit/test-results/coverage.xml
+          name: native-test-artifacts-${{ matrix.env }}
+          path: tests/unit/test-results/${{ matrix.junit }}
+
+      - name: Upload coverage artifact
+        if: always() && matrix.env == 'native'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: tests/unit/test-results/coverage.xml
 
   publish-reports:
     if: always()
@@ -63,9 +71,18 @@ jobs:
       pull-requests: write
     steps:
       - name: Download native test artifacts
-        uses: actions/download-artifact@v4
+        continue-on-error: true
+        uses: actions/download-artifact@v8
         with:
-          name: native-test-artifacts
+          pattern: native-test-artifacts-*
+          path: tests/unit/test-results
+          merge-multiple: true
+
+      - name: Download coverage artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage-report
           path: tests/unit/test-results
 
       - name: Publish native test results
