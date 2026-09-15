@@ -16,11 +16,18 @@
     }
   ],
   "examples": [
-    { 
+    {
       "name": "load_config",
       "base": "examples/load_config",
       "files": [
         "src/load_config.cpp"
+      ]
+    },
+    {
+      "name": "virtual_bool_flags",
+      "base": "examples/virtual_bool_flags",
+      "files": [
+        "src/virtual_bool_flags.cpp"
       ]
     }
   ],

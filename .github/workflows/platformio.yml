@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ master ]
 
+permissions:
+  contents: read
+
 jobs:
 
   build:
@@ -21,15 +24,19 @@ jobs:
           board: huzzah-v7
         - example: load_config
           board: esp-wrover-kit-v7
+        - example: virtual_bool_flags
+          board: huzzah
 
     runs-on: ubuntu-latest
     name: Build ${{ matrix.example }}-${{ matrix.board }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v6
 
       - name: Install Platform IO
         run:

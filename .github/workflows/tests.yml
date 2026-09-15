@@ -1,0 +1,113 @@
+name: Unit Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  native-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - env: native
+            junit: native-junit.xml
+          - env: native_v6
+            junit: native-v6-junit.xml
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+
+      - name: Install PlatformIO
+        run: |
+          pip install -U gcovr platformio
+          platformio update
+
+      - name: Run native unit tests (${{ matrix.env }})
+        run: |
+          cd tests/unit
+          mkdir -p test-results
+          pio test -e ${{ matrix.env }} --junit-output-path test-results/${{ matrix.junit }}
+
+      - name: Generate coverage report
+        if: matrix.env == 'native'
+        run: |
+          gcovr \
+            --root . \
+            --filter '^src/Config' \
+            --object-directory tests/unit/.pio/build/native \
+            --gcov-ignore-errors=source_not_found \
+            --cobertura-pretty \
+            --output tests/unit/test-results/coverage.xml
+
+      - name: Upload native test artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-test-artifacts-${{ matrix.env }}
+          path: tests/unit/test-results/${{ matrix.junit }}
+
+      - name: Upload coverage artifact
+        if: always() && matrix.env == 'native'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: tests/unit/test-results/coverage.xml
+
+  publish-reports:
+    if: always()
+    needs: native-tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+    steps:
+      - name: Download native test artifacts
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          pattern: native-test-artifacts-*
+          path: tests/unit/test-results
+          merge-multiple: true
+
+      - name: Download coverage artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage-report
+          path: tests/unit/test-results
+
+      - name: Publish native test results
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && hashFiles('tests/unit/test-results/*-junit.xml') != ''
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          check_name: Native unit test results
+          comment_title: Native unit test results
+          files: tests/unit/test-results/*-junit.xml
+
+      - name: Publish coverage summary
+        if: always() && hashFiles('tests/unit/test-results/coverage.xml') != ''
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: tests/unit/test-results/coverage.xml
+          badge: true
+          format: markdown
+          output: both
+
+      - name: Comment coverage on pull request
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && hashFiles('code-coverage-results.md') != ''
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: native-coverage-report
+          path: code-coverage-results.md
+          skip_unchanged: true
