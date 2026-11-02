@@ -1,15 +1,15 @@
 #ifndef _ConfigJson_h
 #define _ConfigJson_h
 
-#include <functional>
-
 #include "ConfigOpt.h"
 #include "ConfigOptDefinition.h"
 #include "ConfigOptSecret.h"
 #include "ConfigOptVirtualBool.h"
 #include "ConfigOptVirtualMaskedBool.h"
 
-typedef std::function<void(String name)> ConfigJsonChangeHandler;
+// A plain function pointer rather than std::function, because the AVR core has
+// no <functional>. A handler can't capture, so it keeps any state in globals.
+typedef void (*ConfigJsonChangeHandler)(String name);
 
 class ConfigJson
 {

@@ -9,7 +9,7 @@ static void test_set_ignores_the_dummy_password_sentinel() {
   String backing = "original";
   ConfigOptSecret opt(backing, "", "password", "p");
 
-  TEST_ASSERT_FALSE(opt.set(String(ConfigOptSecret::DUMMY_PASSWORD)));
+  TEST_ASSERT_FALSE(opt.set(String(ConfigOptSecret::dummyPassword())));
   TEST_ASSERT_TRUE(backing.equals("original"));
 }
 

@@ -1,6 +1,5 @@
 #include <unity.h>
 
-#include <EEPROM.h>
 #include <ConfigJson.h>
 
 #include "test_support.h"
@@ -86,13 +85,17 @@ static void test_serialize_to_a_print_stream_matches_serialize_to_string() {
   TEST_ASSERT_TRUE(out.buffer.equals(expected));
 }
 
+// A handler is a plain function, so it records into globals.
+static String changedNames[4];
+static size_t changedCount = 0;
+static void recordChange(String opt) {
+  changedNames[changedCount++] = opt;
+}
+
 static void test_deserialize_updates_only_the_named_options_and_reports_changes() {
   Fixture fx;
-  String changed[4];
-  size_t changedCount = 0;
-  fx.config.onChanged([&](String opt) {
-    changed[changedCount++] = opt;
-  });
+  changedCount = 0;
+  fx.config.onChanged(recordChange);
 
   TEST_ASSERT_TRUE(fx.config.deserialize("{\"name\":\"widget\",\"number\":5}"));
 
@@ -100,8 +103,8 @@ static void test_deserialize_updates_only_the_named_options_and_reports_changes(
   TEST_ASSERT_EQUAL(5, fx.number);
   TEST_ASSERT_FALSE(fx.truth);
   TEST_ASSERT_EQUAL(2, changedCount);
-  TEST_ASSERT_TRUE(changed[0].equals("name"));
-  TEST_ASSERT_TRUE(changed[1].equals("number"));
+  TEST_ASSERT_TRUE(changedNames[0].equals("name"));
+  TEST_ASSERT_TRUE(changedNames[1].equals("number"));
 }
 
 static void test_deserialize_returns_false_for_invalid_json() {
@@ -136,7 +139,7 @@ static void test_reset_restores_every_option_to_its_default() {
 }
 
 static void test_load_returns_false_and_leaves_defaults_when_eeprom_is_blank() {
-  EEPROM.wipe();
+  wipeEeprom();
   Fixture fx;
 
   TEST_ASSERT_FALSE(fx.config.load());
@@ -144,7 +147,7 @@ static void test_load_returns_false_and_leaves_defaults_when_eeprom_is_blank() {
 }
 
 static void test_load_with_merge_skips_the_implicit_reset() {
-  EEPROM.wipe();
+  wipeEeprom();
   Fixture fx;
   fx.name = "untouched";
 
@@ -153,7 +156,7 @@ static void test_load_with_merge_skips_the_implicit_reset() {
 }
 
 static void test_commit_persists_to_eeprom_for_a_later_load() {
-  EEPROM.wipe();
+  wipeEeprom();
   {
     Fixture writer;
     writer.config.reset();
@@ -169,7 +172,7 @@ static void test_commit_persists_to_eeprom_for_a_later_load() {
 }
 
 static void test_commit_refuses_a_record_over_its_limit_and_keeps_the_stored_one() {
-  EEPROM.wipe();
+  wipeEeprom();
   Fixture fx;
   ConfigJson config(fx.opts, 4, 512, 0, 64);
   config.set("name", String("widget"));
@@ -188,17 +191,13 @@ static void test_commit_refuses_a_record_over_its_limit_and_keeps_the_stored_one
 }
 
 static void test_stored_unreadable_tells_a_damaged_record_from_blank_and_valid() {
-  EEPROM.wipe();
+  wipeEeprom();
   Fixture fx;
   TEST_ASSERT_FALSE(fx.config.storedUnreadable());
 
   // A header load() accepts, over JSON that doesn't parse
-  EEPROM.write(0, 5);
-  EEPROM.write(1, 0);
-  EEPROM.write(2, '{');
-  for (int i = 3; i < 7; i++) {
-    EEPROM.write(i, 'x');
-  }
+  const uint8_t damaged[] = {5, 0, '{', 'x', 'x', 'x', 'x'};
+  pokeEeprom(0, damaged, sizeof(damaged));
   TEST_ASSERT_TRUE(fx.config.storedUnreadable());
 
   fx.config.reset();

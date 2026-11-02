@@ -142,24 +142,33 @@ storage after `storageOffset`.
   anything changed.
 - `bool set(const char *name, T val)` -- convenience for changing a single
   option by name (works for `String`, `bool`, `int`, `uint32_t`, `double`).
-- `void onChanged(std::function<void(String name)> handler)` -- called once
-  per option that a `deserialize()`/`set()` call actually changed.
+- `void onChanged(void (*handler)(String name))` -- called once per option
+  that a `deserialize()`/`set()` call actually changed. The handler is a plain
+  function, not a lambda with captures, so it keeps its state in globals.
 
 ## Testing
 
 Unit tests live in [`tests/unit`](tests/unit) and run on PlatformIO's
-`native` platform (no hardware required), using
-[EpoxyDuino](https://github.com/bxparks/EpoxyDuino) for the Arduino
-`String`/`Print`/EEPROM APIs on the host. The same suite runs against both
-ArduinoJson v6 and v7 -- matching the `>=6.16.1` range ConfigJson supports --
-via two PlatformIO envs:
+`native` platform (no hardware required). They build against
+[EpoxyDuino](https://github.com/bxparks/EpoxyDuino), which provides `Arduino.h`
+and the EEPROM emulation for each core, so the tests use the same EEPROM calls
+as the hardware. EpoxyDuino is found through `EPOXY_DUINO_DIR`, a checkout of
+it:
 
 ```sh
+export EPOXY_DUINO_DIR=/path/to/EpoxyDuino
 cd tests/unit
-pio test -e native      # ArduinoJson v7
-pio test -e native_v6   # ArduinoJson v6
+pio test -e native            # ESP32 core, ArduinoJson v7
+pio test -e native_v6         # ESP32 core, ArduinoJson v6
+pio test -e native_esp8266    # ESP8266 core, ArduinoJson v7
+pio test -e native_esp8266_v6 # ESP8266 core, ArduinoJson v6
+pio test -e native_avr        # AVR core, ArduinoJson v7
+pio test -e native_avr_v6     # AVR core, ArduinoJson v6
 ```
 
-Every push and pull request runs both in CI (see
+The v6 envs match the `>=6.16.1` range ConfigJson supports. Every push and pull
+request runs all six in CI (see
 [`.github/workflows/tests.yml`](.github/workflows/tests.yml)), which also
-reports results and line coverage (from the v7 run) on the pull request.
+reports results and line coverage (from the `native` run) on the pull request.
+The examples are also built for real boards, including AVR, in
+[`.github/workflows/platformio.yml`](.github/workflows/platformio.yml).

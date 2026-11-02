@@ -7,8 +7,15 @@ on:
 permissions:
   contents: read
 
+# The native tests build against EpoxyDuino for each core (see
+# tests/unit/platformio.ini), so it is checked out next to ConfigJson.
+env:
+  EPOXY_DUINO_REF: ccr-05a5c7f0-lcv496
+  EPOXY_DUINO_DIR: ${{ github.workspace }}/EpoxyDuino
+
 jobs:
   native-tests:
+    name: Native (${{ matrix.env }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -18,10 +25,26 @@ jobs:
             junit: native-junit.xml
           - env: native_v6
             junit: native-v6-junit.xml
+          - env: native_esp8266
+            junit: native-esp8266-junit.xml
+          - env: native_esp8266_v6
+            junit: native-esp8266-v6-junit.xml
+          - env: native_avr
+            junit: native-avr-junit.xml
+          - env: native_avr_v6
+            junit: native-avr-v6-junit.xml
 
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: false
+
+      - name: Check out EpoxyDuino
+        uses: actions/checkout@v7
+        with:
+          repository: jeremypoulter/EpoxyDuino
+          ref: ${{ env.EPOXY_DUINO_REF }}
+          path: EpoxyDuino
           persist-credentials: false
 
       - name: Set up Python

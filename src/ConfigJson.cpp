@@ -1,13 +1,49 @@
+#include <Arduino.h>
 #include <EEPROM.h>
 #include <MicroDebug.h>
 
 #include "ConfigJson.h"
 
-const char ConfigOptSecret::_DUMMY_PASSWORD[] PROGMEM = "_DUMMY_PASSWORD";
-const __FlashStringHelper * ConfigOptSecret::DUMMY_PASSWORD = FPSTR(_DUMMY_PASSWORD);
-
 // Stored record: a little-endian 16-bit length, then that many bytes of JSON.
 static const size_t RECORD_HEADER_SIZE = 2;
+
+// The EEPROM API differs between the cores, so the storage is only used through
+// these three functions, which give the same results on all of them.
+//   ESP32:   begin() returns bool, commit() returns bool, end() returns void.
+//   ESP8266: begin() returns void, commit() returns bool, end() returns bool.
+//   AVR:     no begin(size), commit() or end(). The EEPROM has a fixed size and
+//            each write goes straight to it.
+
+// False when the storage can't hold `size` bytes.
+static bool storageBegin(size_t size)
+{
+#if defined(ARDUINO_ARCH_ESP32)
+  if(!EEPROM.begin(size)) {
+    return false;
+  }
+#elif defined(ARDUINO_ARCH_ESP8266)
+  // begin() is void here and clamps a size it can't hold, so the length check
+  // below is what tells the two apart.
+  EEPROM.begin(size);
+#endif
+  return size <= EEPROM.length();
+}
+
+static bool storageCommit()
+{
+#if defined(ARDUINO_ARCH_AVR)
+  return true;
+#else
+  return EEPROM.commit();
+#endif
+}
+
+static void storageEnd()
+{
+#if !defined(ARDUINO_ARCH_AVR)
+  EEPROM.end();
+#endif
+}
 
 // True when json is a complete rendering of doc that fits the record. Out of
 // memory, ArduinoJson can leave a setting null or drop it and still produce valid
@@ -39,7 +75,10 @@ bool ConfigJson::load(bool merge)
     reset();
   }
 
-  EEPROM.begin(_storage_size);
+  if(!storageBegin(_storage_size)) {
+    DBUGF("No EEPROM for config");
+    return loaded;
+  }
 
   char start = 0;
   uint8_t a = 0, b = 0;
@@ -67,7 +106,7 @@ bool ConfigJson::load(bool merge)
     DBUGF("No JSON config found");
   }
 
-  EEPROM.end();
+  storageEnd();
 
   return loaded;
 }
@@ -98,7 +137,7 @@ bool ConfigJson::commit()
     return false;
   }
 
-  if(!EEPROM.begin(_storage_size)) {
+  if(!storageBegin(_storage_size)) {
     DBUGF("Config not saved: EEPROM unavailable");
     return false;
   }
@@ -112,8 +151,8 @@ bool ConfigJson::commit()
 
   DBUGF("%d bytes written to EEPROM @ 0x%04x, committing", length + RECORD_HEADER_SIZE, _storage_offset);
 
-  bool saved = EEPROM.commit();
-  EEPROM.end();
+  bool saved = storageCommit();
+  storageEnd();
 
   if(saved) {
     DBUGF("Done");
@@ -126,7 +165,7 @@ bool ConfigJson::commit()
 
 bool ConfigJson::storedUnreadable()
 {
-  if(!EEPROM.begin(_storage_size)) {
+  if(!storageBegin(_storage_size)) {
     return true;
   }
 
@@ -153,7 +192,7 @@ bool ConfigJson::storedUnreadable()
       blank = 0x00 == value || 0xff == value;
     }
   }
-  EEPROM.end();
+  storageEnd();
 
   if(!present) {
     return !blank;
