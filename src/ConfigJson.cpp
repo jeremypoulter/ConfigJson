@@ -62,9 +62,21 @@ ConfigJson::ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t 
   _len(len),
   _storage_size(storageSize),
   _storage_offset(storageOffset),
-  _record_size(recordSize ? recordSize : storageSize - storageOffset),
+  _record_size(0),
   _change(nullptr)
 {
+  // A record must fit in the storage after the offset, and its 16-bit length
+  // header can't describe more than 65535 bytes of JSON. Anything larger would
+  // be written past the storage that was opened, so it is clamped here.
+  size_t remaining = storageOffset < storageSize ? storageSize - storageOffset : 0;
+  size_t size = recordSize ? recordSize : remaining;
+  if(size > remaining) {
+    size = remaining;
+  }
+  if(size > 0xFFFF + RECORD_HEADER_SIZE) {
+    size = 0xFFFF + RECORD_HEADER_SIZE;
+  }
+  _record_size = size;
 }
 
 bool ConfigJson::load(bool merge) 

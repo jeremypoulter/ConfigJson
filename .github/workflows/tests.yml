@@ -10,7 +10,7 @@ permissions:
 # The native tests build against EpoxyDuino for each core (see
 # tests/unit/platformio.ini), so it is checked out next to ConfigJson.
 env:
-  EPOXY_DUINO_REF: ccr-05a5c7f0-lcv496
+  EPOXY_DUINO_REF: develop
   EPOXY_DUINO_DIR: ${{ github.workspace }}/EpoxyDuino
 
 jobs:

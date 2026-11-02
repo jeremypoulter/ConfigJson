@@ -190,6 +190,23 @@ static void test_commit_refuses_a_record_over_its_limit_and_keeps_the_stored_one
   TEST_ASSERT_TRUE(reader.name.equals("widget"));
 }
 
+static void test_record_size_is_clamped_to_the_storage_it_opens() {
+  wipeEeprom();
+  Fixture fx;
+  // Asks for a record far larger than the 512-byte storage. It is clamped, so a
+  // value that only fits the larger record is refused, not written past the end.
+  ConfigJson config(fx.opts, 4, TEST_STORAGE_SIZE, 0, 4096);
+  String big;
+  for (int i = 0; i < 600; i++) {
+    big += 'x';
+  }
+  // Set the value on the option's String directly. set() goes through a small
+  // document, which can't hold a value this long on ArduinoJson v6.
+  config.reset();
+  fx.name = big;
+  TEST_ASSERT_FALSE(config.commit());
+}
+
 static void test_stored_unreadable_tells_a_damaged_record_from_blank_and_valid() {
   wipeEeprom();
   Fixture fx;
@@ -216,5 +233,6 @@ void runConfigJsonTests() {
   RUN_TEST(test_load_with_merge_skips_the_implicit_reset);
   RUN_TEST(test_commit_persists_to_eeprom_for_a_later_load);
   RUN_TEST(test_commit_refuses_a_record_over_its_limit_and_keeps_the_stored_one);
+  RUN_TEST(test_record_size_is_clamped_to_the_storage_it_opens);
   RUN_TEST(test_stored_unreadable_tells_a_damaged_record_from_blank_and_valid);
 }

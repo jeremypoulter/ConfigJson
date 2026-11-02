@@ -130,6 +130,10 @@ storage after `storageOffset`.
   and leaves the stored record alone if the JSON couldn't be built in full
   (for example, out of memory), doesn't fit `recordSize`, or EEPROM fails.
   Nothing is cleared in that case, so a later `commit()` tries again.
+  On the ESP8266 the record is written by erasing and rewriting its flash
+  sector, and the EEPROM's `end()` commits again. A flash failure or power loss
+  during that write can lose the previous record, even though `commit()`
+  returns `false`.
 - `bool storedUnreadable()` -- `true` when the stored record can't be parsed,
   or EEPROM can't be read. Use it before saving over a record that may be
   damaged.
@@ -149,13 +153,15 @@ storage after `storageOffset`.
 ## Testing
 
 Unit tests live in [`tests/unit`](tests/unit) and run on PlatformIO's
-`native` platform (no hardware required). They build against
-[EpoxyDuino](https://github.com/bxparks/EpoxyDuino), which provides `Arduino.h`
-and the EEPROM emulation for each core, so the tests use the same EEPROM calls
-as the hardware. EpoxyDuino is found through `EPOXY_DUINO_DIR`, a checkout of
-it:
+`native` platform (no hardware required). They build against the
+[jeremypoulter/EpoxyDuino](https://github.com/jeremypoulter/EpoxyDuino) fork,
+which provides `Arduino.h`, the platform macros for each core, and the EEPROM
+emulation, so the tests use the same EEPROM calls as the hardware. The fork is
+found through `EPOXY_DUINO_DIR`, so clone it and check out `develop` first:
 
 ```sh
+git clone https://github.com/jeremypoulter/EpoxyDuino.git /path/to/EpoxyDuino
+git -C /path/to/EpoxyDuino checkout develop
 export EPOXY_DUINO_DIR=/path/to/EpoxyDuino
 cd tests/unit
 pio test -e native            # ESP32 core, ArduinoJson v7
