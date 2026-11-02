@@ -113,18 +113,26 @@ new ConfigOptVirtualBool(flagsOpt, 0x02, 0x00, "ledDisabled", "ld");
 ## `ConfigJson` API
 
 ```cpp
-ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t storageOffset = 0);
+ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t storageOffset = 0, size_t recordSize = 0);
 ```
 Wraps an array of options. `storageSize`/`storageOffset` describe the region
 of EEPROM the serialised JSON is stored in (2 length bytes followed by the
-JSON text).
+JSON text). `recordSize` caps what `commit()` may write, header included, so
+a config can share EEPROM with another region. It defaults to the rest of the
+storage after `storageOffset`.
 
 - `bool load(bool merge = false)` -- reads and applies the JSON stored in
   EEPROM. Unless `merge` is `true`, every option is reset to its default
   first. Returns `false` if no valid document was found (options are still
   left at their defaults/current values).
-- `void commit()` -- writes the current options to EEPROM as JSON, if
-  anything has changed since the last `load()`/`commit()`.
+- `bool commit()` -- writes the current options to EEPROM as JSON, if
+  anything has changed since the last `load()`/`commit()`. Returns `false`
+  and leaves the stored record alone if the JSON couldn't be built in full
+  (for example, out of memory), doesn't fit `recordSize`, or EEPROM fails.
+  Nothing is cleared in that case, so a later `commit()` tries again.
+- `bool storedUnreadable()` -- `true` when the stored record can't be parsed,
+  or EEPROM can't be read. Use it before saving over a record that may be
+  damaged.
 - `void reset()` -- sets every option back to its default.
 - `bool serialize(String &json, bool longNames = true, bool compactOutput = false, bool hideSecrets = false)`
   and the `Print&`/`JsonDocument&` overloads -- write the current options out

@@ -20,14 +20,19 @@ private:
   size_t _len;
   size_t _storage_size;
   size_t _storage_offset;
+  size_t _record_size;
 
   ConfigJsonChangeHandler _change;
 public:
-  ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t storageOffset = 0);
+  // recordSize is the most commit() may write, header included. It defaults to
+  // the rest of the storage after storageOffset.
+  ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t storageOffset = 0, size_t recordSize = 0);
 
   void reset();
-  void commit();
+  bool commit();
   bool load(bool merge = false);
+  // True when the stored record can't be parsed, or EEPROM can't be read at all.
+  bool storedUnreadable();
 
   bool serialize(String& json, bool longNames = true, bool compactOutput = false, bool hideSecrets = false);
   bool serialize(Print& json, bool longNames = true, bool compactOutput = false, bool hideSecrets = false);

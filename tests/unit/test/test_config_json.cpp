@@ -168,6 +168,44 @@ static void test_commit_persists_to_eeprom_for_a_later_load() {
   TEST_ASSERT_EQUAL(7, reader.number);
 }
 
+static void test_commit_refuses_a_record_over_its_limit_and_keeps_the_stored_one() {
+  EEPROM.wipe();
+  Fixture fx;
+  ConfigJson config(fx.opts, 4, 512, 0, 64);
+  config.set("name", String("widget"));
+  TEST_ASSERT_TRUE(config.commit());
+
+  String big;
+  for (int i = 0; i < 100; i++) {
+    big += 'x';
+  }
+  config.set("name", big);
+  TEST_ASSERT_FALSE(config.commit());
+
+  Fixture reader;
+  TEST_ASSERT_TRUE(reader.config.load());
+  TEST_ASSERT_TRUE(reader.name.equals("widget"));
+}
+
+static void test_stored_unreadable_tells_a_damaged_record_from_blank_and_valid() {
+  EEPROM.wipe();
+  Fixture fx;
+  TEST_ASSERT_FALSE(fx.config.storedUnreadable());
+
+  // A header load() accepts, over JSON that doesn't parse
+  EEPROM.write(0, 5);
+  EEPROM.write(1, 0);
+  EEPROM.write(2, '{');
+  for (int i = 3; i < 7; i++) {
+    EEPROM.write(i, 'x');
+  }
+  TEST_ASSERT_TRUE(fx.config.storedUnreadable());
+
+  fx.config.reset();
+  TEST_ASSERT_TRUE(fx.config.commit());
+  TEST_ASSERT_FALSE(fx.config.storedUnreadable());
+}
+
 void runConfigJsonTests() {
   RUN_TEST(test_serialize_includes_every_option);
   RUN_TEST(test_serialize_to_a_print_stream_matches_serialize_to_string);
@@ -178,4 +216,6 @@ void runConfigJsonTests() {
   RUN_TEST(test_load_returns_false_and_leaves_defaults_when_eeprom_is_blank);
   RUN_TEST(test_load_with_merge_skips_the_implicit_reset);
   RUN_TEST(test_commit_persists_to_eeprom_for_a_later_load);
+  RUN_TEST(test_commit_refuses_a_record_over_its_limit_and_keeps_the_stored_one);
+  RUN_TEST(test_stored_unreadable_tells_a_damaged_record_from_blank_and_valid);
 }
