@@ -15,8 +15,9 @@
 // ConfigJson's EEPROM round-trip on the "native" PlatformIO test platform.
 class EEPROMClass {
   public:
-    void begin(size_t size) {
+    bool begin(size_t size) {
       _size = size < kCapacity ? size : kCapacity;
+      return true;
     }
 
     uint8_t read(int address) const {

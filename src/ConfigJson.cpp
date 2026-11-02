@@ -9,17 +9,6 @@ const __FlashStringHelper * ConfigOptSecret::DUMMY_PASSWORD = FPSTR(_DUMMY_PASSW
 // Stored record: a little-endian 16-bit length, then that many bytes of JSON.
 static const size_t RECORD_HEADER_SIZE = 2;
 
-// EEPROMClass::begin() reports failure on the device; the simulator's returns void.
-static bool eepromBegin(size_t size)
-{
-#ifdef EPOXY_DUINO
-  EEPROM.begin(size);
-  return true;
-#else
-  return EEPROM.begin(size);
-#endif
-}
-
 // True when json is a complete rendering of doc that fits the record. Out of
 // memory, ArduinoJson can leave a setting null or drop it and still produce valid
 // JSON, and a String that can't grow stops short. Saving either would replace a
@@ -109,7 +98,7 @@ bool ConfigJson::commit()
     return false;
   }
 
-  if(!eepromBegin(_storage_size)) {
+  if(!EEPROM.begin(_storage_size)) {
     DBUGF("Config not saved: EEPROM unavailable");
     return false;
   }
@@ -137,7 +126,7 @@ bool ConfigJson::commit()
 
 bool ConfigJson::storedUnreadable()
 {
-  if(!eepromBegin(_storage_size)) {
+  if(!EEPROM.begin(_storage_size)) {
     return true;
   }
 
