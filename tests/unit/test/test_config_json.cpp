@@ -263,6 +263,34 @@ static void test_load_refuses_a_record_that_runs_past_the_storage() {
   TEST_ASSERT_TRUE(runsOver.name.equals("default"));
 }
 
+static void test_load_bounds_a_record_by_the_storage_after_its_offset() {
+  // From offset 100 to the end of the 512-byte storage is 412 bytes, of which a
+  // record can use 410 after its 2-byte header.
+  const int offset = 100;
+  const size_t remaining = TEST_STORAGE_SIZE - offset;
+  auto writeAt = [&](size_t length) {
+    const uint8_t header[] = {(uint8_t)(length & 0xff), (uint8_t)(length >> 8)};
+    pokeEeprom(offset, header, sizeof(header));
+    String json = paddedRecord(length);
+    pokeEeprom(offset + 2, (const uint8_t *) json.c_str(), json.length());
+  };
+
+  wipeEeprom();
+  Fixture fits;
+  ConfigJson fitsConfig(fits.opts, 4, TEST_STORAGE_SIZE, offset);
+  writeAt(remaining - 2);
+  TEST_ASSERT_TRUE(fitsConfig.load());
+
+  // One byte longer runs past the end of the storage, though it is within the
+  // total size. Its JSON is valid, so only the bounds check can refuse it.
+  wipeEeprom();
+  Fixture runsOver;
+  ConfigJson runsOverConfig(runsOver.opts, 4, TEST_STORAGE_SIZE, offset);
+  writeAt(remaining - 1);
+  TEST_ASSERT_FALSE(runsOverConfig.load());
+  TEST_ASSERT_TRUE(runsOver.name.equals("default"));
+}
+
 static void test_stored_unreadable_tells_a_damaged_record_from_blank_and_valid() {
   wipeEeprom();
   Fixture fx;
@@ -314,5 +342,6 @@ void runConfigJsonTests() {
   RUN_TEST(test_set_stores_a_long_string_in_full);
   RUN_TEST(test_load_returns_false_for_a_damaged_record_and_leaves_defaults);
   RUN_TEST(test_load_refuses_a_record_that_runs_past_the_storage);
+  RUN_TEST(test_load_bounds_a_record_by_the_storage_after_its_offset);
   RUN_TEST(test_stored_unreadable_tells_a_damaged_record_from_blank_and_valid);
 }

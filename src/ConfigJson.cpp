@@ -45,11 +45,12 @@ static void storageEnd()
 #endif
 }
 
-// True when a record of this length, header included, fits in the storage.
-// Compared as unsigned long so a 16-bit length can't wrap on AVR.
-static bool recordFits(size_t length, size_t storageSize)
+// True when a record of this length, header included, fits in the storage after
+// storageOffset. Compared as unsigned long so a 16-bit length can't wrap on AVR.
+static bool recordFits(size_t length, size_t storageSize, size_t storageOffset)
 {
-  return (unsigned long)length + RECORD_HEADER_SIZE <= storageSize;
+  size_t remaining = storageOffset < storageSize ? storageSize - storageOffset : 0;
+  return (unsigned long)length + RECORD_HEADER_SIZE <= remaining;
 }
 
 // True when json is a complete rendering of doc that fits the record. Out of
@@ -116,7 +117,7 @@ bool ConfigJson::load(bool merge)
 
   DBUGF("Got %d %c from EEPROM @ 0x%04x", length, start, _storage_offset);
 
-  if(2 <= length && recordFits(length, _storage_size) &&
+  if(2 <= length && recordFits(length, _storage_size, _storage_offset) &&
     '{' == start)
   {
     char json[length + 1];
@@ -204,7 +205,7 @@ bool ConfigJson::storedUnreadable()
 
   // Same test load() uses, so the two agree on whether there is a record
   size_t length = lengthLow | ((size_t)lengthHigh << 8);
-  bool present = RECORD_HEADER_SIZE <= length && recordFits(length, _storage_size) && '{' == start;
+  bool present = RECORD_HEADER_SIZE <= length && recordFits(length, _storage_size, _storage_offset) && '{' == start;
 
   String json;
   bool blank = true;
