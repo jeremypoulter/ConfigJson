@@ -6,11 +6,12 @@
 
 class ConfigOptSecret : public ConfigOptDefinition<String>
 {
-private:
-  static const char _DUMMY_PASSWORD[];
-
 public:
-  static const __FlashStringHelper * DUMMY_PASSWORD;
+  // Stands for a password that is set but not shown. It is a function because
+  // F() isn't allowed at namespace scope on AVR.
+  static const __FlashStringHelper * dummyPassword() {
+    return F("_DUMMY_PASSWORD");
+  }
 
   ConfigOptSecret(String &v, const String &d, const char *l, const char *s) :
     ConfigOptDefinition<String>(v, d, l, s)
@@ -18,7 +19,7 @@ public:
   }
 
   bool set(const String &value) {
-    if(value.equals(DUMMY_PASSWORD)) {
+    if(value.equals(dummyPassword())) {
       return false;
     }
 
@@ -28,7 +29,7 @@ public:
   virtual bool serialize(CONFIG_JSON_DOC &doc, bool longNames, bool compactOutput, bool hideSecrets) {
     if(!compactOutput || _val != _default) {
       if(hideSecrets) {
-        doc[name(longNames)] = (_val != 0) ? String(DUMMY_PASSWORD) : "";
+        doc[name(longNames)] = (_val != 0) ? String(dummyPassword()) : "";
         return true;
       } else {
         doc[name(longNames)] = _val;

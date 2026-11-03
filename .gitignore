@@ -39,3 +39,4 @@ Visual\ Micro
 .vscode/ipch
 _codeql_detected_source_root
 tests/unit/test-results
+tests/unit/epoxyeepromdata

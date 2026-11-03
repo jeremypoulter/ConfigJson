@@ -1,15 +1,15 @@
 #ifndef _ConfigJson_h
 #define _ConfigJson_h
 
-#include <functional>
-
 #include "ConfigOpt.h"
 #include "ConfigOptDefinition.h"
 #include "ConfigOptSecret.h"
 #include "ConfigOptVirtualBool.h"
 #include "ConfigOptVirtualMaskedBool.h"
 
-typedef std::function<void(String name)> ConfigJsonChangeHandler;
+// A plain function pointer rather than std::function, because the AVR core has
+// no <functional>. A handler can't capture, so it keeps any state in globals.
+typedef void (*ConfigJsonChangeHandler)(String name);
 
 class ConfigJson
 {
@@ -20,14 +20,23 @@ private:
   size_t _len;
   size_t _storage_size;
   size_t _storage_offset;
+  size_t _record_size;
 
   ConfigJsonChangeHandler _change;
 public:
-  ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t storageOffset = 0);
+  // recordSize is the most commit() may write, header included. It defaults to
+  // the rest of the storage after storageOffset.
+  ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t storageOffset = 0, size_t recordSize = 0);
+  // The record size the constructor uses for a region: recordSize, or the rest of
+  // the storage after storageOffset when recordSize is 0, limited to that rest and
+  // to what the 16-bit length header can describe.
+  static size_t recordLimit(size_t storageSize, size_t storageOffset, size_t recordSize);
 
   void reset();
-  void commit();
+  bool commit();
   bool load(bool merge = false);
+  // True when the stored record can't be parsed, or EEPROM can't be read at all.
+  bool storedUnreadable();
 
   bool serialize(String& json, bool longNames = true, bool compactOutput = false, bool hideSecrets = false);
   bool serialize(Print& json, bool longNames = true, bool compactOutput = false, bool hideSecrets = false);
@@ -44,10 +53,15 @@ public:
 #if ARDUINOJSON_VERSION_MAJOR >= 7
     JsonDocument doc;
 #else
-    const size_t capacity = JSON_OBJECT_SIZE(1) + 256;
+    // Sized for a value as large as the storage, so a long string isn't cut short.
+    const size_t capacity = JSON_OBJECT_SIZE(1) + _storage_size;
     DynamicJsonDocument doc(capacity);
 #endif
     doc[name] = val;
+    // A value that didn't fit is refused, rather than stored cut short.
+    if(doc.overflowed()) {
+      return false;
+    }
     return ConfigJson::deserialize(doc);
   }
 
