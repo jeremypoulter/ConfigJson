@@ -233,6 +233,12 @@ static void test_set_stores_a_long_string_in_full() {
   }
   TEST_ASSERT_TRUE(fx.config.set("name", big));
   TEST_ASSERT_TRUE(fx.name.equals(big));
+
+  // The value must also survive a save and a reload, not just sit in RAM.
+  TEST_ASSERT_TRUE(fx.config.commit());
+  Fixture reader;
+  TEST_ASSERT_TRUE(reader.config.load());
+  TEST_ASSERT_TRUE(reader.name.equals(big));
 }
 
 static void test_load_returns_false_for_a_damaged_record_and_leaves_defaults() {
