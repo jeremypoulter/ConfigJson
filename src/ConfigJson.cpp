@@ -45,6 +45,13 @@ static void storageEnd()
 #endif
 }
 
+// True when a record of this length, header included, fits in the storage.
+// Compared as unsigned long so a 16-bit length can't wrap on AVR.
+static bool recordFits(size_t length, size_t storageSize)
+{
+  return (unsigned long)length + RECORD_HEADER_SIZE <= storageSize;
+}
+
 // True when json is a complete rendering of doc that fits the record. Out of
 // memory, ArduinoJson can leave a setting null or drop it and still produce valid
 // JSON, and a String that can't grow stops short. Saving either would replace a
@@ -105,7 +112,7 @@ bool ConfigJson::load(bool merge)
 
   DBUGF("Got %d %c from EEPROM @ 0x%04x", length, start, _storage_offset);
 
-  if(2 <= length && length < _storage_size &&
+  if(2 <= length && recordFits(length, _storage_size) &&
     '{' == start)
   {
     char json[length + 1];
@@ -114,9 +121,12 @@ bool ConfigJson::load(bool merge)
     }
     json[length] = '\0';
     DBUGF("Found stored JSON %s", json);
-    deserialize(json);
-    _modified = false;
-    loaded = true;
+    if(deserialize(json)) {
+      _modified = false;
+      loaded = true;
+    } else {
+      DBUGF("Stored JSON is damaged");
+    }
   } else {
     DBUGF("No JSON config found");
   }
@@ -190,7 +200,7 @@ bool ConfigJson::storedUnreadable()
 
   // Same test load() uses, so the two agree on whether there is a record
   size_t length = lengthLow | ((size_t)lengthHigh << 8);
-  bool present = RECORD_HEADER_SIZE <= length && length < _storage_size && '{' == start;
+  bool present = RECORD_HEADER_SIZE <= length && recordFits(length, _storage_size) && '{' == start;
 
   String json;
   bool blank = true;

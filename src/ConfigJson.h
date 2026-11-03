@@ -49,10 +49,15 @@ public:
 #if ARDUINOJSON_VERSION_MAJOR >= 7
     JsonDocument doc;
 #else
-    const size_t capacity = JSON_OBJECT_SIZE(1) + 256;
+    // Sized for a value as large as the storage, so a long string isn't cut short.
+    const size_t capacity = JSON_OBJECT_SIZE(1) + _storage_size;
     DynamicJsonDocument doc(capacity);
 #endif
     doc[name] = val;
+    // A value that didn't fit is refused, rather than stored cut short.
+    if(doc.overflowed()) {
+      return false;
+    }
     return ConfigJson::deserialize(doc);
   }
 

@@ -200,11 +200,67 @@ static void test_record_size_is_clamped_to_the_storage_it_opens() {
   for (int i = 0; i < 600; i++) {
     big += 'x';
   }
-  // Set the value on the option's String directly. set() goes through a small
-  // document, which can't hold a value this long on ArduinoJson v6.
+  // Assigned directly: this test is about commit(), not set().
   config.reset();
   fx.name = big;
   TEST_ASSERT_FALSE(config.commit());
+}
+
+// Writes a stored record with the given length header over the given bytes.
+static void writeRecord(const String &json, size_t length) {
+  const uint8_t header[] = {(uint8_t)(length & 0xff), (uint8_t)(length >> 8)};
+  pokeEeprom(0, header, sizeof(header));
+  pokeEeprom(2, (const uint8_t *) json.c_str(), json.length());
+}
+
+// A JSON object padded with spaces to exactly `length` bytes.
+static String paddedRecord(size_t length) {
+  String json = "{\"name\":\"widget\"}";
+  while (json.length() < length) {
+    json += ' ';
+  }
+  return json;
+}
+
+static void test_set_stores_a_long_string_in_full() {
+  wipeEeprom();
+  Fixture fx;
+  // Longer than the fixed scratch document ArduinoJson v6 used to get, which
+  // cut the value short and still reported success.
+  String big;
+  for (int i = 0; i < 300; i++) {
+    big += 'x';
+  }
+  TEST_ASSERT_TRUE(fx.config.set("name", big));
+  TEST_ASSERT_TRUE(fx.name.equals(big));
+}
+
+static void test_load_returns_false_for_a_damaged_record_and_leaves_defaults() {
+  wipeEeprom();
+  Fixture fx;
+  // A header load() accepts, over JSON that doesn't parse
+  const uint8_t damaged[] = {5, 0, '{', 'x', 'x', 'x', 'x'};
+  pokeEeprom(0, damaged, sizeof(damaged));
+
+  TEST_ASSERT_FALSE(fx.config.load());
+  TEST_ASSERT_TRUE(fx.name.equals("default"));
+}
+
+static void test_load_refuses_a_record_that_runs_past_the_storage() {
+  // A record ending on the storage's last byte is read.
+  wipeEeprom();
+  Fixture fits;
+  writeRecord(paddedRecord(TEST_STORAGE_SIZE - 2), TEST_STORAGE_SIZE - 2);
+  TEST_ASSERT_TRUE(fits.config.load());
+  TEST_ASSERT_TRUE(fits.name.equals("widget"));
+
+  // One byte longer runs one byte past the storage, so it is refused. Its
+  // last byte is valid JSON, so only the bounds check can refuse it.
+  wipeEeprom();
+  Fixture runsOver;
+  writeRecord(paddedRecord(TEST_STORAGE_SIZE - 1), TEST_STORAGE_SIZE - 1);
+  TEST_ASSERT_FALSE(runsOver.config.load());
+  TEST_ASSERT_TRUE(runsOver.name.equals("default"));
 }
 
 static void test_stored_unreadable_tells_a_damaged_record_from_blank_and_valid() {
@@ -234,5 +290,8 @@ void runConfigJsonTests() {
   RUN_TEST(test_commit_persists_to_eeprom_for_a_later_load);
   RUN_TEST(test_commit_refuses_a_record_over_its_limit_and_keeps_the_stored_one);
   RUN_TEST(test_record_size_is_clamped_to_the_storage_it_opens);
+  RUN_TEST(test_set_stores_a_long_string_in_full);
+  RUN_TEST(test_load_returns_false_for_a_damaged_record_and_leaves_defaults);
+  RUN_TEST(test_load_refuses_a_record_that_runs_past_the_storage);
   RUN_TEST(test_stored_unreadable_tells_a_damaged_record_from_blank_and_valid);
 }
