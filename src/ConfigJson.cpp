@@ -73,8 +73,11 @@ ConfigJson::ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t 
   if(size > remaining) {
     size = remaining;
   }
-  if(size > 0xFFFF + RECORD_HEADER_SIZE) {
-    size = 0xFFFF + RECORD_HEADER_SIZE;
+  // Compared as unsigned long: on AVR, size_t and unsigned int are 16 bits, so
+  // 0xFFFF + RECORD_HEADER_SIZE would wrap to 1 there.
+  const unsigned long maxRecord = 0xFFFFUL + RECORD_HEADER_SIZE;
+  if((unsigned long)size > maxRecord) {
+    size = (size_t)maxRecord;
   }
   _record_size = size;
 }
