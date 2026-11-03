@@ -27,6 +27,10 @@ public:
   // recordSize is the most commit() may write, header included. It defaults to
   // the rest of the storage after storageOffset.
   ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t storageOffset = 0, size_t recordSize = 0);
+  // The record size the constructor uses for a region: recordSize, or the rest of
+  // the storage after storageOffset when recordSize is 0, limited to that rest and
+  // to what the 16-bit length header can describe.
+  static size_t recordLimit(size_t storageSize, size_t storageOffset, size_t recordSize);
 
   void reset();
   bool commit();

@@ -278,6 +278,26 @@ static void test_stored_unreadable_tells_a_damaged_record_from_blank_and_valid()
   TEST_ASSERT_FALSE(fx.config.storedUnreadable());
 }
 
+// The limit is the 16-bit length header's maximum plus its own two bytes. A
+// storage that can't be reached on the emulated EEPROMs is tested through the
+// helper that computes it.
+static void test_record_limit_is_exactly_what_the_length_header_can_describe() {
+  const size_t header = 2;
+  const size_t maxRecord = 0xFFFF + header;
+  // Storage larger than the header can describe: the default is clamped to it
+  TEST_ASSERT_TRUE(ConfigJson::recordLimit(100000, 0, 0) == maxRecord);
+  // A payload of exactly 65535 bytes, plus the header, is accepted
+  TEST_ASSERT_TRUE(ConfigJson::recordLimit(100000, 0, maxRecord) == maxRecord);
+  // One byte more is clamped, not allowed to wrap or to be written
+  TEST_ASSERT_TRUE(ConfigJson::recordLimit(100000, 0, maxRecord + 1) == maxRecord);
+  // Smaller storage: the rest after the offset, with an explicit size clamped to it
+  TEST_ASSERT_TRUE(ConfigJson::recordLimit(512, 0, 0) == 512);
+  TEST_ASSERT_TRUE(ConfigJson::recordLimit(512, 100, 0) == 412);
+  TEST_ASSERT_TRUE(ConfigJson::recordLimit(512, 0, 1000) == 512);
+  // An offset past the end leaves nothing, rather than underflowing
+  TEST_ASSERT_TRUE(ConfigJson::recordLimit(512, 600, 0) == 0);
+}
+
 void runConfigJsonTests() {
   RUN_TEST(test_serialize_includes_every_option);
   RUN_TEST(test_serialize_to_a_print_stream_matches_serialize_to_string);
@@ -290,6 +310,7 @@ void runConfigJsonTests() {
   RUN_TEST(test_commit_persists_to_eeprom_for_a_later_load);
   RUN_TEST(test_commit_refuses_a_record_over_its_limit_and_keeps_the_stored_one);
   RUN_TEST(test_record_size_is_clamped_to_the_storage_it_opens);
+  RUN_TEST(test_record_limit_is_exactly_what_the_length_header_can_describe);
   RUN_TEST(test_set_stores_a_long_string_in_full);
   RUN_TEST(test_load_returns_false_for_a_damaged_record_and_leaves_defaults);
   RUN_TEST(test_load_refuses_a_record_that_runs_past_the_storage);

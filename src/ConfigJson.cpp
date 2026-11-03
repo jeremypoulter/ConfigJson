@@ -63,14 +63,7 @@ static bool recordComplete(const CONFIG_JSON_DOC &doc, const String &json, size_
     recordSize >= RECORD_HEADER_SIZE && expected <= recordSize - RECORD_HEADER_SIZE;
 }
 
-ConfigJson::ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t storageOffset, size_t recordSize) :
-  _modified(false),
-  _opts(opts),
-  _len(len),
-  _storage_size(storageSize),
-  _storage_offset(storageOffset),
-  _record_size(0),
-  _change(nullptr)
+size_t ConfigJson::recordLimit(size_t storageSize, size_t storageOffset, size_t recordSize)
 {
   // A record must fit in the storage after the offset, and its 16-bit length
   // header can't describe more than 65535 bytes of JSON. Anything larger would
@@ -86,7 +79,18 @@ ConfigJson::ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t 
   if((unsigned long)size > maxRecord) {
     size = (size_t)maxRecord;
   }
-  _record_size = size;
+  return size;
+}
+
+ConfigJson::ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t storageOffset, size_t recordSize) :
+  _modified(false),
+  _opts(opts),
+  _len(len),
+  _storage_size(storageSize),
+  _storage_offset(storageOffset),
+  _record_size(recordLimit(storageSize, storageOffset, recordSize)),
+  _change(nullptr)
+{
 }
 
 bool ConfigJson::load(bool merge) 
