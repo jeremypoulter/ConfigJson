@@ -34,6 +34,20 @@ jobs:
           board: uno-v6
         - example: virtual_bool_flags
           board: huzzah
+        - example: virtual_bool_flags
+          board: huzzah-v7
+        - example: virtual_bool_flags
+          board: huzzah-v6
+        - example: virtual_bool_flags
+          board: esp-wrover-kit
+        - example: virtual_bool_flags
+          board: esp-wrover-kit-v7
+        - example: virtual_bool_flags
+          board: esp-wrover-kit-v6
+        - example: virtual_bool_flags
+          board: uno
+        - example: virtual_bool_flags
+          board: uno-v6
 
     runs-on: ubuntu-latest
     name: Build ${{ matrix.example }}-${{ matrix.board }}
