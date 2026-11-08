@@ -1,7 +1,7 @@
 {
   "name": "ConfigJson",
   "keywords": "config,eeprom,json",
-  "description": "Save config options to EEPROM as a JSON documrt",
+  "description": "Save config options to EEPROM as a JSON document",
   "repository":
   {
     "type": "git",
@@ -31,7 +31,7 @@
       ]
     }
   ],
-  "version": "0.0.8",
+  "version": "0.0.9",
   "frameworks": "Arduino",
   "platforms": "*",
   "dependencies": [
