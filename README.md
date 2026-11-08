@@ -113,18 +113,30 @@ new ConfigOptVirtualBool(flagsOpt, 0x02, 0x00, "ledDisabled", "ld");
 ## `ConfigJson` API
 
 ```cpp
-ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t storageOffset = 0);
+ConfigJson(ConfigOpt **opts, size_t len, size_t storageSize, size_t storageOffset = 0, size_t recordSize = 0);
 ```
 Wraps an array of options. `storageSize`/`storageOffset` describe the region
 of EEPROM the serialised JSON is stored in (2 length bytes followed by the
-JSON text).
+JSON text). `recordSize` caps what `commit()` may write, header included, so
+a config can share EEPROM with another region. It defaults to the rest of the
+storage after `storageOffset`.
 
 - `bool load(bool merge = false)` -- reads and applies the JSON stored in
   EEPROM. Unless `merge` is `true`, every option is reset to its default
   first. Returns `false` if no valid document was found (options are still
   left at their defaults/current values).
-- `void commit()` -- writes the current options to EEPROM as JSON, if
-  anything has changed since the last `load()`/`commit()`.
+- `bool commit()` -- writes the current options to EEPROM as JSON, if
+  anything has changed since the last `load()`/`commit()`. Returns `false`
+  and leaves the stored record alone if the JSON couldn't be built in full
+  (for example, out of memory), doesn't fit `recordSize`, or EEPROM fails.
+  Nothing is cleared in that case, so a later `commit()` tries again.
+  On the ESP8266 the record is written by erasing and rewriting its flash
+  sector, and the EEPROM's `end()` commits again. A flash failure or power loss
+  during that write can lose the previous record, even though `commit()`
+  returns `false`.
+- `bool storedUnreadable()` -- `true` when the stored record can't be parsed,
+  or EEPROM can't be read. Use it before saving over a record that may be
+  damaged.
 - `void reset()` -- sets every option back to its default.
 - `bool serialize(String &json, bool longNames = true, bool compactOutput = false, bool hideSecrets = false)`
   and the `Print&`/`JsonDocument&` overloads -- write the current options out
@@ -134,24 +146,35 @@ JSON text).
   anything changed.
 - `bool set(const char *name, T val)` -- convenience for changing a single
   option by name (works for `String`, `bool`, `int`, `uint32_t`, `double`).
-- `void onChanged(std::function<void(String name)> handler)` -- called once
-  per option that a `deserialize()`/`set()` call actually changed.
+- `void onChanged(void (*handler)(String name))` -- called once per option
+  that a `deserialize()`/`set()` call actually changed. The handler is a plain
+  function, not a lambda with captures, so it keeps its state in globals.
 
 ## Testing
 
 Unit tests live in [`tests/unit`](tests/unit) and run on PlatformIO's
-`native` platform (no hardware required), using
-[EpoxyDuino](https://github.com/bxparks/EpoxyDuino) for the Arduino
-`String`/`Print`/EEPROM APIs on the host. The same suite runs against both
-ArduinoJson v6 and v7 -- matching the `>=6.16.1` range ConfigJson supports --
-via two PlatformIO envs:
+`native` platform (no hardware required). They build against the
+[jeremypoulter/EpoxyDuino](https://github.com/jeremypoulter/EpoxyDuino) fork,
+which provides `Arduino.h`, the platform macros for each core, and the EEPROM
+emulation, so the tests use the same EEPROM calls as the hardware. The fork is
+found through `EPOXY_DUINO_DIR`, so clone it and check out `develop` first:
 
 ```sh
+git clone https://github.com/jeremypoulter/EpoxyDuino.git /path/to/EpoxyDuino
+git -C /path/to/EpoxyDuino checkout develop
+export EPOXY_DUINO_DIR=/path/to/EpoxyDuino
 cd tests/unit
-pio test -e native      # ArduinoJson v7
-pio test -e native_v6   # ArduinoJson v6
+pio test -e native            # ESP32 core, ArduinoJson v7
+pio test -e native_v6         # ESP32 core, ArduinoJson v6
+pio test -e native_esp8266    # ESP8266 core, ArduinoJson v7
+pio test -e native_esp8266_v6 # ESP8266 core, ArduinoJson v6
+pio test -e native_avr        # AVR core, ArduinoJson v7
+pio test -e native_avr_v6     # AVR core, ArduinoJson v6
 ```
 
-Every push and pull request runs both in CI (see
+The v6 envs match the `>=6.16.1` range ConfigJson supports. Every push and pull
+request runs all six in CI (see
 [`.github/workflows/tests.yml`](.github/workflows/tests.yml)), which also
-reports results and line coverage (from the v7 run) on the pull request.
+reports results and line coverage (from the `native` run) on the pull request.
+The examples are also built for real boards, including AVR, in
+[`.github/workflows/platformio.yml`](.github/workflows/platformio.yml).

@@ -1,5 +1,5 @@
 #include <unity.h>
-#include <EEPROM.h>
+#include "test_support.h"
 
 void runConfigOptDefinitionTests();
 void runConfigOptSecretTests();
@@ -8,7 +8,7 @@ void runConfigOptVirtualMaskedBoolTests();
 void runConfigJsonTests();
 
 void setUp(void) {
-  EEPROM.wipe();
+  wipeEeprom();
 }
 
 void tearDown(void) {}

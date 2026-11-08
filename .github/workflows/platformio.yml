@@ -24,6 +24,14 @@ jobs:
           board: huzzah-v7
         - example: load_config
           board: esp-wrover-kit-v7
+        - example: load_config
+          board: huzzah-v6
+        - example: load_config
+          board: esp-wrover-kit-v6
+        - example: load_config
+          board: uno
+        - example: load_config
+          board: uno-v6
         - example: virtual_bool_flags
           board: huzzah
 
